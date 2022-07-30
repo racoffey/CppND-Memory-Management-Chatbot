@@ -255,10 +255,8 @@ void ChatLogic::SendMessageToChatbot(std::string message)
 
 void ChatLogic::SendMessageToUser(std::string message)
 {   
-    cout << "Arrived in Send Message to user, Printing response..." << message << "\n"; 
     _panelDialog->PrintChatbotResponse(message);
 
-    cout << "Returning from Send Message to User" << "\n";
 }
 
 wxBitmap *ChatLogic::GetImageFromChatbot()
