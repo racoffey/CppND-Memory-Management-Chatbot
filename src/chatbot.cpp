@@ -2,11 +2,15 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
+#include <stdlib.h>
+#include <iostream>
 
 #include "chatlogic.h"
 #include "graphnode.h"
 #include "graphedge.h"
 #include "chatbot.h"
+
+using namespace std;
 
 // constructor WITHOUT memory allocation
 ChatBot::ChatBot()
@@ -32,18 +36,100 @@ ChatBot::ChatBot(std::string filename)
 
 ChatBot::~ChatBot()
 {
-    std::cout << "ChatBot Destructor" << std::endl;
+    std::cout << "ChatBot Destructor - of ChatBot at " << this << std::endl;
 
-    // deallocate heap memory
-    if(_image != NULL) // Attention: wxWidgets used NULL and not nullptr
-    {
-        delete _image;
-        _image = NULL;
-    }
 }
 
 //// STUDENT CODE
 ////
+    
+
+ChatBot::ChatBot(const ChatBot &sourceChatBot) // 2 : copy constructor
+{
+    // Copy data handles
+    _rootNode = sourceChatBot._rootNode;
+    _chatLogic = sourceChatBot._chatLogic;
+    _currentNode = sourceChatBot._currentNode;
+
+    // Make deep copy of image into heap memory
+    _image = new wxBitmap();
+    *_image = *sourceChatBot._image;
+
+    // Need to update the chat both handle in chat logic with the new location of the chat bot
+    _chatLogic->SetChatbotHandle(this);
+
+    std::cout << "Copy Constructor - of instance " << &sourceChatBot << " to instance " << this << std::endl;
+}
+
+
+ChatBot &ChatBot::operator=(const ChatBot &sourceChatBot) // 3: Copy assignment operator
+{
+    std::cout << "Copy Assignment operator - assigning content of instance " << &sourceChatBot << " to instance " << this << std::endl;
+    if (this == &sourceChatBot)
+        return *this;
+    delete _image;
+
+    // Copy data handles
+    _rootNode = sourceChatBot._rootNode;
+    _chatLogic = sourceChatBot._chatLogic;
+    _currentNode = sourceChatBot._currentNode;
+
+    // Make deep copy of image into heap memory
+    _image = new wxBitmap();
+    *_image = *sourceChatBot._image;
+
+    // Need to update the chat both handle in chat logic with the new location of the chat bot
+    _chatLogic->SetChatbotHandle(this);
+
+    return *this;
+}
+
+ChatBot::ChatBot(ChatBot &&sourceChatBot) // 4 : Move constructor
+{
+    std::cout << "Move Constructor - to move instance " << &sourceChatBot << " to instance " << this << std::endl;
+    
+    // Copying data handles across for all parameters
+    _chatLogic = sourceChatBot._chatLogic;
+    _rootNode = sourceChatBot._rootNode;
+    _image = sourceChatBot._image;
+    _currentNode = sourceChatBot._currentNode;
+
+    // Need to update the chat both handle in chat logic with the new location of the chatbot
+    _chatLogic->SetChatbotHandle(this);
+
+    // Invalidate source pointers
+    sourceChatBot._image = NULL;
+    sourceChatBot._currentNode = nullptr;
+    sourceChatBot._rootNode = nullptr;
+    sourceChatBot._chatLogic = nullptr;
+}
+
+ChatBot &ChatBot::operator=(ChatBot &&sourceChatBot) // 5 : move assignment operator
+{
+    std::cout << "Move Assignment operator - to assign instance " << &sourceChatBot << " to instance " << this << std::endl;
+    if (this == &sourceChatBot)
+        return *this;
+
+    delete _image;
+
+    // Copying data handles across for all parameters
+    _chatLogic = sourceChatBot._chatLogic;
+    _rootNode = sourceChatBot._rootNode;
+    _image = sourceChatBot._image;
+    _currentNode = sourceChatBot._currentNode;
+
+    // Need to update the chat both handle in chat logic with the new location of the chatbot
+    _chatLogic->SetChatbotHandle(this);
+
+    // Invalidate source pointers
+    sourceChatBot._image = NULL;
+    sourceChatBot._currentNode = nullptr;
+    sourceChatBot._rootNode = nullptr;
+    sourceChatBot._chatLogic = nullptr;
+
+    return *this;
+}
+
 
 ////
 //// EOF STUDENT CODE
@@ -95,6 +181,7 @@ void ChatBot::SetCurrentNode(GraphNode *node)
 
     // send selected node answer to user
     _chatLogic->SendMessageToUser(answer);
+
 }
 
 int ChatBot::ComputeLevenshteinDistance(std::string s1, std::string s2)

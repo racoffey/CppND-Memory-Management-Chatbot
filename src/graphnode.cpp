@@ -1,5 +1,9 @@
 #include "graphedge.h"
 #include "graphnode.h"
+#include "chatlogic.h"
+#include <iostream>
+
+using namespace std;
 
 GraphNode::GraphNode(int id)
 {
@@ -11,7 +15,8 @@ GraphNode::~GraphNode()
     //// STUDENT CODE
     ////
 
-    delete _chatBot; 
+    // The delete _chatBot command resulted in calling the deconstructor of the Chatbot a 2nd time leading 
+    // to the initial segmentation fault when closing the Chatbot window.
 
     ////
     //// EOF STUDENT CODE
@@ -27,23 +32,30 @@ void GraphNode::AddEdgeToParentNode(GraphEdge *edge)
     _parentEdges.push_back(edge);
 }
 
-void GraphNode::AddEdgeToChildNode(GraphEdge *edge)
+//Updated to support passing of Unique Pointer for edges
+void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge)
 {
-    _childEdges.push_back(edge);
+    _childEdges.push_back(std::move(edge));
 }
+
 
 //// STUDENT CODE
 ////
-void GraphNode::MoveChatbotHere(ChatBot *chatbot)
+
+// Modifed to act on object and not pointer
+void GraphNode::MoveChatbotHere(ChatBot chatbot)
 {
-    _chatBot = chatbot;
-    _chatBot->SetCurrentNode(this);
+    _chatBot = std::move(chatbot);
+
+    _chatBot.SetCurrentNode(this);
+
 }
 
 void GraphNode::MoveChatbotToNewNode(GraphNode *newNode)
 {
-    newNode->MoveChatbotHere(_chatBot);
-    _chatBot = nullptr; // invalidate pointer at source
+
+    newNode->MoveChatbotHere(std::move(_chatBot));
+
 }
 ////
 //// EOF STUDENT CODE
@@ -53,7 +65,8 @@ GraphEdge *GraphNode::GetChildEdgeAtIndex(int index)
     //// STUDENT CODE
     ////
 
-    return _childEdges[index];
+    // Modified to return raw pointer using "get"
+    return _childEdges[index].get();
 
     ////
     //// EOF STUDENT CODE
